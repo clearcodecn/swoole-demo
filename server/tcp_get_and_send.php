@@ -2,10 +2,9 @@
 /**
  * author : rookiejin <mrjnamei@gmail.com>
  * createTime : 2018/1/4 10:26
- * description: php_oop.php - swoole-demo
- * 该代码是一份干净的tcp server 事件回调，
- * 没有任何对事件回调的业务处理 .
- * 以该代码为基准，后面的demo都在此基础上修改 .
+ * description: tcp_get_and_send.php - swoole-demo
+ * 该代码是一份简单的面向对象形式的 tcp 服务器和客户端通讯的demo
+ * 功能：单发.  群发.
  */
 
 class Server {
@@ -56,6 +55,11 @@ class Server {
     public $task_num ;
 
     /**
+     * @var $table swoole_table 内存表
+     */
+    public $table;
+
+    /**
      * Server constructor.
      *
      * @param array $config
@@ -65,12 +69,25 @@ class Server {
         $this->server = new swoole_server($config ['host'] , $config ['port']);
         $this->config = $config;
         $this->serverConfig();
+        $this->createTable();
         self::$_worker = & $this; // 引用
     }
 
-    public function serverConfig()
+    private function serverConfig()
     {
         $this->server->set($this->config['server']);
+    }
+
+    /**
+     * 创建swoole_table
+     */
+    private function createTable()
+    {
+        $this->table = new swoole_table( 65536 );
+        $this->table->column("fd",swoole_table::TYPE_INT , 8);
+        $this->table->column("worker_id", swoole_table::TYPE_INT , 4);
+        $this->table->column("name",swoole_table::TYPE_STRING,255);
+        $this->table->create();
     }
 
     public function start()
@@ -177,12 +194,12 @@ class Server {
      */
     public function onSwooleTask($server , $task_id, $src_worker_id,$data)
     {
-        return $data ;
+        // todo
     }
 
     public function onSwooleFinish()
     {
-        
+        // todo
     }
 
     /**
@@ -193,7 +210,7 @@ class Server {
      */
     public function onSwoolePipeMessage($server , $src_worker_id,$message)
     {
-
+        // todo
     }
 
     /**
@@ -237,17 +254,68 @@ class Server {
      */
     public function onSwooleConnect($server ,$fd ,$reactorId)
     {
-        echo "#connected\n";
+        echo "#{$fd} has connected\n";
+        $server->send($fd , "please input your name\n");
     }
 
     /**
      * @param $server server对象
      * @param $fd 文件描述符
      * @param $reactorId reactor线程id
+     * @param $data 数据
      */
-    public function onSwooleReceive($server,$fd,$reactorId)
+    public function onSwooleReceive($server,$fd,$reactorId, $data)
     {
-        echo "#received\n";
+        $data = json_decode($data, true);
+        $exist = $this->table->exist($fd);
+        $from    = $data ['from'];
+        $to      = $data ['to'];
+        $message = $data ['message'];
+
+        if(!$exist) {
+            foreach ($this->table as $row)
+            {
+                if($row ['name'] == $from)
+                {
+                    $server->send($fd , 'name already exists');
+                    return ;
+                }
+            }
+            $this->table->set($fd , ['name' => $from , 'fd' => $fd]);
+            $server->send($fd , "welcome to join tcp chat room\n");
+        }
+        // 发送给其他人 .
+        if($to == 'all')
+        {
+            $this->sendToAllExceptHim($server , $message , $fd);
+            return ;
+        }
+        if(!empty($to) && !empty($message))
+        {
+            $this->sendToOne($server ,$message ,$to);
+        }
+        return ;
+    }
+
+    private function sendToOne($server , $message , $name)
+    {
+        foreach ($this->table as $row)
+        {
+            if($row ['name'] == $name)
+            {
+                $server->send($row ['fd'] , $message);
+                return ;
+            }
+        }
+    }
+
+    private function sendToAllExceptHim($server , $message, $fd)
+    {
+        foreach ($this->table as $row)
+        {
+            if($row['fd'] == $fd) continue ;
+            $server->send($row ['fd'] , $message);
+        }
     }
 
     /**
@@ -258,7 +326,7 @@ class Server {
      */
     public function onSwooleClose($server, $fd ,$reactorId)
     {
-        echo "#swooleClosed\n" ;
+        $this->table->del($fd);
     }
 
     public function setProcessName($name)
