@@ -1,5 +1,10 @@
 # 该demo是一个简单的对象池复用demo. 
 
+# Usage 
+``` 
+php main.php 
+```
+
 # 原理: 
 
 - swoole_http_server 启动以后 对 request 事件进行监听, 请求来了之后所做的事情如下：
