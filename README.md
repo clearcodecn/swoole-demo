@@ -4,7 +4,7 @@
 
 - server/  服务器server端实现
 - client/  服务器对应文件client简单实现 
-- server/http_object_pool 对象池技术 (https://github.com/clearcodecn/swoole-demo/blob/master/server/http_object_pool/README.md)[介绍]
+- server/http_object_pool 对象池技术 [介绍](https://github.com/clearcodecn/swoole-demo/blob/master/server/http_object_pool/README.md)
 - 基准server端代码 server/tcp_oop.php 
 
 ### 服务器都是纯异步的. 
