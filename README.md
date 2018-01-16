@@ -6,6 +6,8 @@
 - client/  服务器对应文件client简单实现 
 - server/http_object_pool 对象池技术 [介绍](https://github.com/clearcodecn/swoole-demo/blob/master/server/http_object_pool/README.md)
 - 基准server端代码 server/tcp_oop.php 
+- [Mysql连接池](https://github.com/clearcodecn/swoole-demo/blob/master/server/http_mysql_pool/README.md)
+
 
 ### 服务器都是纯异步的. 
 - 在swoole_server->start()启动之前 io 操作可以使用同步阻塞的形式 .
