@@ -7,6 +7,7 @@
 - server/http_object_pool 对象池技术 [介绍](https://github.com/clearcodecn/swoole-demo/blob/master/server/http_object_pool/README.md)
 - 基准server端代码 server/tcp_oop.php 
 - [Mysql连接池](https://github.com/clearcodecn/swoole-demo/blob/master/server/http_mysql_pool/README.md)
+- [Yield协程](https://github.com/clearcodecn/swoole-demo/tree/master/server/yield_http_mysql_pool)
 
 
 ### 服务器都是纯异步的. 
